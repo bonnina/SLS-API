@@ -1,0 +1,32 @@
+service: sls-movies
+
+custom:
+  secrets: ${file(secrets.json)}
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${self:custom.secrets.NODE_ENV}
+  region: eu-central-1
+  environment: 
+    NODE_ENV: ${self:custom.secrets.NODE_ENV}
+    DB: ${self:custom.secrets.DB}
+    JWT_SECRET: ${self:custom.secrets.JWT_SECRET}
+
+functions:
+  app:
+    handler: server.api
+    events:
+      - http:
+          path: /
+          method: ANY
+          cors: 
+            origin: '*'
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: 
+            origin: '*'
+
+plugins:
+  - serverless-offline
