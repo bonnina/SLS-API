@@ -23,10 +23,11 @@ module.exports = function registerUser(reqBody) {
       token: signToken(user.username),  
       id: user._id,
       movies: []
-    }));
-    // .catch(err => ({
-    //   success: false,
-    //   err: err.message,
-    //   token: null
-    // }))  FIXME
+    }))
+    .catch(err => ({
+      success: false,
+      err: err.message,
+      token: null,
+      movies: null
+    }))
 }
