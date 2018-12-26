@@ -4,32 +4,33 @@ const Account = require('../shema')
 
 function signToken(reqPassword, account) {
   return bcrypt.compare(reqPassword, account.password)
-    .then(isValid => {
-      if (isValid) {
-        account.token = jwt.sign({ username: account.username }, process.env.JWT_SECRET, { expiresIn: '1d' });
-        return account;
-      } else return Promise.reject(new Error('Credentials do not match.'))
-    });
+    .then(isValid => 
+      !isValid
+        ? Promise.reject(new Error('Credentials do not match.'))
+        : jwt.sign({ username: account.username }, process.env.JWT_SECRET, { expiresIn: '1d' })
+    )
 }
 
-module.exports = function logInUser(reqBody) {
+module.exports = function logInUser(reqBody) { 
+  let acc;
   return Account.findOne({ username: reqBody.username })
-    .then(account =>
-      !account
+    .then(account => {
+      acc = account;
+      return !account
         ? Promise.reject(new Error('User with this username does not exit.'))
         : signToken(reqBody.password, account)
-    )
-    .then(account => ({
+    })
+    .then(tkn => ({
       success: true,
       err: null,
-      token: account.token,   
-      id: user._id,
-      movies: account.movies
+      token: tkn,   
+      id: acc._id,
+      movies: acc.movies
     }))
-    // .catch(err => ({
-    //    success: false,
-    //    err: err.message,
-    //    token: null,
-    //    movies: null
-    //  }))  
+    .catch(err => ({
+      success: false,
+      err: err.message,
+      token: null,
+      movies: null
+    }))  
 }
